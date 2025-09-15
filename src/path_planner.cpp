@@ -1,12 +1,10 @@
-#include "/home/daniel/path_planner/src/path_planner.h"
+#include "/home/daniel/path_planner_a_star/src/path_planner.h"
 #include <cmath>
 #include <algorithm>
 #include <stdexcept>
 
-PathPlannerGraph::PathPlannerGraph(Point start, Point goal, std::vector<Obstacle> obstacles,
-                                 int points_per_obstacle, double ellipse_factor)
-    : start_(start), goal_(goal), obstacles_(obstacles),
-      points_per_obstacle_(points_per_obstacle), ellipse_factor_(ellipse_factor) {}
+PathPlannerGraph::PathPlannerGraph(int points_per_obstacle, double ellipse_factor)
+    : points_per_obstacle_(points_per_obstacle), ellipse_factor_(ellipse_factor) {}
 
 // Distance Between Two Points
 double PathPlannerGraph::distance(const Point& p1, const Point& p2) const {
@@ -16,14 +14,14 @@ double PathPlannerGraph::distance(const Point& p1, const Point& p2) const {
 }
 
 // Check if The Point is in The Ellipse
-bool PathPlannerGraph::is_point_in_ellipse(const Point& point) const {
+bool PathPlannerGraph::is_point_in_ellipse(const Point& point, const Point& start_, const Point& goal_) const {
     double sum_dist = distance(point, start_) + distance(point, goal_);
     double max_dist = ellipse_factor_ * distance(start_, goal_);
     return sum_dist <= max_dist;
 }
 
 // Check if the Edge Intersect with an Obstacle
-bool PathPlannerGraph::edge_intersects_obstacles(const Point& p1, const Point& p2) const {
+bool PathPlannerGraph::edge_intersects_obstacles(const Point& p1, const Point& p2, std::vector<Obstacle> obstacles_) const {
     auto [x1, y1] = p1;
     auto [x2, y2] = p2;
     
@@ -50,10 +48,10 @@ bool PathPlannerGraph::edge_intersects_obstacles(const Point& p1, const Point& p
 
 
 // Connect every Node to a Node with an Edge
-void PathPlannerGraph::connect_node_to_existing_nodes(const Point& new_node) {
+void PathPlannerGraph::connect_node_to_existing_nodes(const Point& new_node, std::vector<Obstacle> obstacles_) {
     for (const auto& [existing_node, edges] : graph_) {
         if (existing_node != new_node) {
-            if (!edge_intersects_obstacles(new_node, existing_node)) {
+            if (!edge_intersects_obstacles(new_node, existing_node, obstacles_)) {
                 double dist = distance(new_node, existing_node);
                 graph_[new_node].emplace_back(existing_node, dist);
                 graph_[existing_node].emplace_back(new_node, dist);
@@ -63,27 +61,27 @@ void PathPlannerGraph::connect_node_to_existing_nodes(const Point& new_node) {
 }
 
 // Path Planning Algorithm
-void PathPlannerGraph::generate_graph() {
+PathPlannerGraph::Graph PathPlannerGraph::generateGraph(Point start, Point goal, std::vector<Obstacle> obstacles) {
     // Clear The Existence Graph
     graph_.clear();
 
     // Add The Inicial and Goal Points to The Graph
-    graph_[start_] = {};
-    graph_[goal_] = {};
+    graph_[start] = {};
+    graph_[goal] = {};
 
     // Check if possible to have direct connection between the Inicial and Goal Points
-    if (!edge_intersects_obstacles(start_, goal_)) {
-        double dist = distance(start_, goal_);
-        graph_[start_].emplace_back(goal_, dist);
-        graph_[goal_].emplace_back(start_, dist);
-        return;
+    if (!edge_intersects_obstacles(start, goal, obstacles)) {
+        double dist = distance(start, goal);
+        graph_[start].emplace_back(goal, dist);
+        graph_[goal].emplace_back(start, dist);
+        return graph_;
     }
-    
-    connect_node_to_existing_nodes(start_);
+
+    connect_node_to_existing_nodes(start, obstacles);
     
     // Create Nodes around The Obstacles
-    for (size_t idx = 0; idx < obstacles_.size(); ++idx) {
-        auto [ox, oy, radius] = obstacles_[idx];
+    for (size_t idx = 0; idx < obstacles.size(); ++idx) {
+        auto [ox, oy, radius] = obstacles[idx];
         
         for (int i = 0; i < points_per_obstacle_; ++i) {
             double angle = 2 * M_PI * i / points_per_obstacle_;
@@ -93,9 +91,9 @@ void PathPlannerGraph::generate_graph() {
             
             // Verify if Node is in another Obstacle
             bool inside_other_obstacle = false;
-            for (size_t jdx = 0; jdx < obstacles_.size(); ++jdx) {
+            for (size_t jdx = 0; jdx < obstacles.size(); ++jdx) {
                 if (jdx == idx) continue;
-                auto [other_ox, other_oy, other_r] = obstacles_[jdx];
+                auto [other_ox, other_oy, other_r] = obstacles[jdx];
                 if (distance(pt, std::make_tuple(other_ox, other_oy)) < other_r) {
                     inside_other_obstacle = true;
                     break;
@@ -103,12 +101,14 @@ void PathPlannerGraph::generate_graph() {
             }
 
             // Check if The Point is Valid
-            if (!inside_other_obstacle && is_point_in_ellipse(pt)) {
+            if (!inside_other_obstacle && is_point_in_ellipse(pt, start, goal)) {
                 graph_[pt] = {};
-                connect_node_to_existing_nodes(pt);
+                connect_node_to_existing_nodes(pt, obstacles);
             }
         }
     }
+
+    return graph_;
 }
 
 

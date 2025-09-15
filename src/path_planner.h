@@ -29,24 +29,20 @@ public:
     using Obstacle = std::tuple<double, double, double>;
     using Graph = std::unordered_map<Point, std::vector<std::pair<Point, double>>>;
     
-    PathPlannerGraph(Point start, Point goal, std::vector<Obstacle> obstacles, 
-                    int points_per_obstacle = 5, double ellipse_factor = 1.1);
-    
+    PathPlannerGraph(int points_per_obstacle = 8, double ellipse_factor = 1.1);
+
+    Graph generateGraph(Point start, Point goal, std::vector<Obstacle> obstacles);
     Graph get_graph() const;
-    void generate_graph();
     
 private:
-    Point start_;
-    Point goal_;
-    std::vector<Obstacle> obstacles_;
     int points_per_obstacle_;
     double ellipse_factor_;
     Graph graph_;
     
-    bool is_point_in_ellipse(const Point& point) const;
+    bool is_point_in_ellipse(const Point& point, const Point& start_, const Point& goal_) const;
     double distance(const Point& p1, const Point& p2) const;
-    bool edge_intersects_obstacles(const Point& p1, const Point& p2) const;
-    void connect_node_to_existing_nodes(const Point& new_node);
+    bool edge_intersects_obstacles(const Point& p1, const Point& p2, std::vector<Obstacle> obstacles_) const;
+    void connect_node_to_existing_nodes(const Point& new_node, std::vector<Obstacle> obstacles_);
 };
 
 #endif // PATH_PLANNER_H

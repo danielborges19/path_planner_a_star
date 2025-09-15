@@ -1,0 +1,22 @@
+# Build directory
+build/
+CMakeFiles/
+*.o
+*.so
+*.pyc
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*~
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# CMake
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json

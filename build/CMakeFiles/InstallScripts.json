@@ -1,7 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/home/daniel/path_planner_a_star/build/cmake_install.cmake"
-	],
-	"Parallel" : false
-}

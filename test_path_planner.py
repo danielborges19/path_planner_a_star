@@ -70,11 +70,10 @@ goal = (10.0, 10.0)
 obstacles = [(3.0, 4.0, 1.0), (3.0, 2.0, 1.0), (3.0, 3.0, 1.0), (7.0, 9.0, 1.0), (7.0, 7.0, 1.0)]
 
 st = time.time()
-planner = path_planner.PathPlannerGraph(start, goal, obstacles)
+planner = path_planner.PathPlannerGraph()
 
-planner.generate_graph()
+graph = planner.generateGraph(start, goal, obstacles)
 
-graph = planner.get_graph()
 
 G = nx.Graph()
 for node, edges in graph.items():

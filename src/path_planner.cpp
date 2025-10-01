@@ -1,4 +1,4 @@
-#include "/home/daniel/path_planner_a_star/src/path_planner.h"
+#include "/home/daniel/Control/other_tests/path_planner_a_star/src/path_planner.h"
 #include <cmath>
 #include <algorithm>
 #include <stdexcept>
